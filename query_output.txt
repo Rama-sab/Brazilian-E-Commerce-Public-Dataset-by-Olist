@@ -1,0 +1,75 @@
+          table_name          |  count  
+------------------------------+---------
+ product_category_translation |      71
+ sellers                      |    3095
+ products                     |   32951
+ order_payments               |  103886
+ orders                       |   99441
+ order_reviews                |   99224
+ order_items                  |  112650
+ customers                    |   99441
+ geolocation                  | 1000163
+(9 rows)
+
+             order_id             | order_status | order_purchase_timestamp | order_estimated_delivery_date 
+----------------------------------+--------------+--------------------------+-------------------------------
+ e481f51cbdc54678b7cc49136f2d6af7 | delivered    | 2017-10-02 10:56:33      | 2017-10-18 00:00:00
+ 53cdb2fc8bc7dce0b6741e2150273451 | delivered    | 2018-07-24 20:41:37      | 2018-08-13 00:00:00
+ 47770eb9100c2d0c44946d9cf07ec65d | delivered    | 2018-08-08 08:38:49      | 2018-09-04 00:00:00
+ 949d5b44dbf5de918fe9c16f97b45f8a | delivered    | 2017-11-18 19:28:06      | 2017-12-15 00:00:00
+ ad21c59c0840e6cb83a9ceb5573f8159 | delivered    | 2018-02-13 21:18:39      | 2018-02-26 00:00:00
+(5 rows)
+
+             order_id             | order_status | customer_city | customer_state 
+----------------------------------+--------------+---------------+----------------
+ 5f79b5b0931d63f1a42989eb65b9da6e | delivered    | osasco        | SP
+ a44895d095d7e0702b6a162fa2dbeced | delivered    | itapecerica   | MG
+ 316a104623542e4d75189bb372bc5f8d | delivered    | nova venecia  | ES
+ 5825ce2e88d5346438686b0bba99e5ee | delivered    | mendonca      | MG
+ 0ab7fb08086d4af9141453c91878ed7a | delivered    | sao paulo     | SP
+(5 rows)
+
+             order_id             | product_category_name | seller_state | price  | freight_value 
+----------------------------------+-----------------------+--------------+--------+---------------
+ f30149f4a8882a08895b6a242aa0d612 | perfumaria            | SP           | 101.65 |         18.59
+ f5eda0ded77c1293b04c953138c8331d | automotivo            | SP           | 129.90 |         13.93
+ 0bf736fd0fd5169d60de3699fcbcf986 | cama_mesa_banho       | SP           | 229.00 |         13.10
+ 3aba44d8e554ab4bb8c09f6f78032ca8 | utilidades_domesticas | PR           |  58.90 |         19.60
+ 6f0dfb5b5398b271cc6bbd9ee263530e | utilidades_domesticas | PR           |  58.90 |         19.60
+(5 rows)
+
+             order_id             | items_total | freight_total | payment_total 
+----------------------------------+-------------+---------------+---------------
+ 01625f404436eb3cb98cba1e9433db29 |       49.00 |         34.15 |         83.15
+ 140d98b96ef924164add7c0fd859992a |      111.99 |         44.36 |        156.35
+ 05871d52118762aaae93a3682fc5fe2f |      329.00 |         60.31 |        389.31
+ 165f98649abb9970c125205f5f0d8b60 |       25.20 |         98.02 |        123.22
+ 1758ad531fb74f63e2ce97f1791a1325 |       89.00 |         54.89 |        143.89
+(5 rows)
+
+             order_id             | order_delivered_customer_date | order_estimated_delivery_date | is_late 
+----------------------------------+-------------------------------+-------------------------------+---------
+ e481f51cbdc54678b7cc49136f2d6af7 | 2017-10-10 21:25:13           | 2017-10-18 00:00:00           |       0
+ 53cdb2fc8bc7dce0b6741e2150273451 | 2018-08-07 15:27:45           | 2018-08-13 00:00:00           |       0
+ 47770eb9100c2d0c44946d9cf07ec65d | 2018-08-17 18:06:29           | 2018-09-04 00:00:00           |       0
+ 949d5b44dbf5de918fe9c16f97b45f8a | 2017-12-02 00:28:42           | 2017-12-15 00:00:00           |       0
+ ad21c59c0840e6cb83a9ceb5573f8159 | 2018-02-16 18:17:02           | 2018-02-26 00:00:00           |       0
+(5 rows)
+
+ delivery_class | num_orders |  pct  
+----------------+------------+-------
+ late           |       7826 |  8.11
+ on_time        |      88644 | 91.89
+(2 rows)
+
+ order_status | avg_review_score |   n   
+--------------+------------------+-------
+ delivered    |             4.16 | 96361
+ shipped      |             2.01 |  1043
+ canceled     |             1.81 |   609
+ unavailable  |             1.53 |   597
+ invoiced     |             1.66 |   313
+ processing   |             1.28 |   296
+ created      |             2.33 |     3
+ approved     |             2.50 |     2
+(8 rows)
