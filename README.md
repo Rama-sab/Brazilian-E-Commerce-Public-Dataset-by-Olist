@@ -137,22 +137,4 @@ sellers.seller_zip_code_prefix     ──> geolocation.geolocation_zip_code_pref
 - **geolocation** links to `customers` / `sellers` through the ZIP-code prefix,
   not a dedicated ID.
 
-## The ML problem we're preparing for
 
-**Late-delivery classification**: predict whether a *delivered* order will
-arrive after `order_estimated_delivery_date`. Target definition used in
-`test_queries.sql`:
-
-```sql
-CASE WHEN order_delivered_customer_date > order_estimated_delivery_date
-     THEN 1 ELSE 0 END AS is_late
-```
-
-On this dataset, delivered orders split **≈8.1% late / ≈91.9% on-time** — a
-fairly imbalanced target to keep in mind for later modelling.
-
-**Leakage warning (from the task PDF):** `order_delivered_customer_date`,
-`order_delivered_carrier_date`, and the review fields are only known *after*
-the order is delivered — they can be used to build the label and for
-analysis, but must NOT be used as model input features, since they wouldn't
-exist yet at prediction time.
