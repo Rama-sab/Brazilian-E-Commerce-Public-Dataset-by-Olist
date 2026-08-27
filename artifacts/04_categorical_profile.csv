@@ -1,0 +1,6 @@
+column,unique,top_value,top_share,rare_value_count_below_1pct,missing_pct
+customer_state,27,SP,0.40284914629270385,14,0.0
+seller_state_mode,22,SP,0.7074294007019206,16,0.0
+product_category_mode,71,bed_bath_table,0.09818004116749841,50,1.7784951650402048
+payment_type_mode,4,credit_card,0.7634793940381169,1,0.0014808452664781056
+customer_city,3747,sao paulo,0.14689985043462808,3738,0.0

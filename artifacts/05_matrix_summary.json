@@ -1,0 +1,59 @@
+{
+  "fit_split": "train only",
+  "numeric_input_features": [
+    "item_count",
+    "product_count",
+    "seller_count",
+    "total_price",
+    "total_freight",
+    "avg_item_price",
+    "max_item_price",
+    "product_category_count",
+    "product_name_length_mean",
+    "product_description_length_mean",
+    "product_photos_qty_mean",
+    "product_weight_g_mean",
+    "product_volume_cm3_mean",
+    "payment_count",
+    "payment_value_total",
+    "max_payment_installments",
+    "payment_type_count",
+    "customer_seller_distance_km",
+    "estimated_delivery_lead_days",
+    "purchase_year",
+    "purchase_month",
+    "purchase_dayofweek",
+    "purchase_hour",
+    "purchase_is_weekend",
+    "purchase_is_fixed_holiday"
+  ],
+  "categorical_input_features": [
+    "customer_state",
+    "seller_state_mode",
+    "product_category_mode",
+    "payment_type_mode"
+  ],
+  "transformed_feature_count": 142,
+  "matrix_format": "SciPy CSR sparse NPZ",
+  "matrices": {
+    "train": {
+      "rows": 67529,
+      "columns": 142,
+      "nonzero": 2633631,
+      "late_labels": 6096
+    },
+    "validation": {
+      "rows": 14470,
+      "columns": 142,
+      "nonzero": 564330,
+      "late_labels": 773
+    },
+    "test": {
+      "rows": 14471,
+      "columns": 142,
+      "nonzero": 564369,
+      "late_labels": 957
+    }
+  },
+  "leakage_check_passed": true
+}

@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "clean_start": true,
+  "started_utc": "2026-08-24T19:58:20.104923+00:00",
+  "finished_utc": "2026-08-24T20:04:09.911956+00:00",
+  "python": "3.13.0 (tags/v3.13.0:60403a5, Oct  7 2024, 09:38:07) [MSC v.1941 64 bit (AMD64)]",
+  "notebooks": [
+    {
+      "notebook": "01_read_and_join.ipynb",
+      "seconds": 240.28,
+      "status": "ok"
+    },
+    {
+      "notebook": "02_create_labels.ipynb",
+      "seconds": 21.61,
+      "status": "ok"
+    },
+    {
+      "notebook": "03_split_data.ipynb",
+      "seconds": 22.23,
+      "status": "ok"
+    },
+    {
+      "notebook": "04_eda_training_only.ipynb",
+      "seconds": 21.31,
+      "status": "ok"
+    },
+    {
+      "notebook": "05_feature_engineering.ipynb",
+      "seconds": 11.38,
+      "status": "ok"
+    },
+    {
+      "notebook": "06_train_tune_evaluate.ipynb",
+      "seconds": 32.9,
+      "status": "ok"
+    }
+  ]
+}

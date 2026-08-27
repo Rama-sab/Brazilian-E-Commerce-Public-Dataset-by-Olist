@@ -1,0 +1,50 @@
+{
+  "primary_metric": "average_precision",
+  "selected_C": 0.01,
+  "selected_threshold": 0.7899999999999999,
+  "validation": {
+    "baseline": {
+      "average_precision": 0.053420870767104355,
+      "roc_auc": 0.5,
+      "precision_late": 0.0,
+      "recall_late": 0.0,
+      "f1_late": 0.0,
+      "balanced_accuracy": 0.5,
+      "accuracy": 0.9465791292328957,
+      "threshold": 0.5
+    },
+    "logistic_regression": {
+      "average_precision": 0.14389800201174383,
+      "roc_auc": 0.7571943072868621,
+      "precision_late": 0.18472727272727274,
+      "recall_late": 0.32858990944372574,
+      "f1_late": 0.23649906890130354,
+      "balanced_accuracy": 0.6233735850788753,
+      "accuracy": 0.8866620594333103,
+      "threshold": 0.7899999999999999
+    }
+  },
+  "test": {
+    "baseline": {
+      "average_precision": 0.06613226452905811,
+      "roc_auc": 0.5,
+      "precision_late": 0.0,
+      "recall_late": 0.0,
+      "f1_late": 0.0,
+      "balanced_accuracy": 0.5,
+      "accuracy": 0.9338677354709419,
+      "threshold": 0.5
+    },
+    "logistic_regression": {
+      "average_precision": 0.1248526672553471,
+      "roc_auc": 0.6920656916957051,
+      "precision_late": 0.10640394088669951,
+      "recall_late": 0.22570532915360503,
+      "f1_late": 0.14462671576832942,
+      "balanced_accuracy": 0.5457370807378207,
+      "accuracy": 0.823439983415106,
+      "threshold": 0.7899999999999999
+    }
+  },
+  "test_evaluated_once": true
+}

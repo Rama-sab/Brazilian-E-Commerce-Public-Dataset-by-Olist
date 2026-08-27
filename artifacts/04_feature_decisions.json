@@ -1,0 +1,61 @@
+{
+  "base_numeric_features": [
+    "item_count",
+    "product_count",
+    "seller_count",
+    "total_price",
+    "total_freight",
+    "avg_item_price",
+    "max_item_price",
+    "product_category_count",
+    "product_name_length_mean",
+    "product_description_length_mean",
+    "product_photos_qty_mean",
+    "product_weight_g_mean",
+    "product_volume_cm3_mean",
+    "payment_count",
+    "payment_value_total",
+    "max_payment_installments",
+    "payment_type_count",
+    "customer_seller_distance_km"
+  ],
+  "base_categorical_features": [
+    "customer_state",
+    "seller_state_mode",
+    "product_category_mode",
+    "payment_type_mode"
+  ],
+  "engineered_numeric_features": [
+    "estimated_delivery_lead_days",
+    "purchase_year",
+    "purchase_month",
+    "purchase_dayofweek",
+    "purchase_hour",
+    "purchase_is_weekend",
+    "purchase_is_fixed_holiday"
+  ],
+  "leakage_columns": [
+    "late",
+    "delivery_label",
+    "delivery_delay_days",
+    "order_status",
+    "order_approved_at",
+    "order_delivered_carrier_date",
+    "order_delivered_customer_date",
+    "shipping_limit_date_max"
+  ],
+  "identifier_or_high_cardinality_columns": [
+    "order_id",
+    "customer_id",
+    "customer_unique_id",
+    "customer_city",
+    "customer_zip_code_prefix",
+    "seller_zip_code_prefix_mode"
+  ],
+  "missing_values": "median for numeric; most-frequent for categorical; train fit only",
+  "categorical_encoding": "one-hot with unknown handling and rare-category grouping",
+  "numeric_scaling": "standard scaling for logistic regression; train fit only",
+  "first_model": "class-weighted logistic regression",
+  "primary_metric": "average precision (PR-AUC)",
+  "reason": "interpretable sparse baseline suited to an imbalanced binary target"
+}

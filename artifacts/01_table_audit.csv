@@ -1,0 +1,10 @@
+table,row_meaning,rows,columns,key,duplicate_key_rows
+customers,one customer record used by one order,99441,5,customer_id,0.0
+geolocation,one coordinate observation for a ZIP prefix,1000163,5,(observations; ZIP repeats),
+order_items,one item position inside an order,112650,7,"order_id, order_item_id",0.0
+order_payments,one payment transaction/sequence for an order,103886,5,"order_id, payment_sequential",0.0
+order_reviews,one review row associated with an order,99224,7,"review_id, order_id",0.0
+orders,one customer order,99441,8,order_id,0.0
+product_category_translation,one Portuguese category translation,71,2,product_category_name,0.0
+products,one product,32951,9,product_id,0.0
+sellers,one seller,3095,4,seller_id,0.0

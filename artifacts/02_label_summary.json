@@ -1,0 +1,10 @@
+{
+  "label_rule": "late=1 when delivered timestamp > estimated timestamp (Task 1 baseline)",
+  "baseline_consistency_check": "matches Task 1 SQL timestamp comparison",
+  "labelable_rows": 96470,
+  "late_rows": 7826,
+  "on_time_rows": 88644,
+  "late_rate": 0.08112366538820359,
+  "majority_to_minority_ratio": 11.326859187324304,
+  "imbalance_level": "severe"
+}

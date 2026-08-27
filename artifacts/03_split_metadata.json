@@ -1,0 +1,14 @@
+{
+  "method": "chronological",
+  "ratios": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "sort_columns": [
+    "order_purchase_timestamp",
+    "order_id"
+  ],
+  "reason": "simulate training on past orders and predicting later orders",
+  "max_late_rate_shift": 0.036851456677400966
+}

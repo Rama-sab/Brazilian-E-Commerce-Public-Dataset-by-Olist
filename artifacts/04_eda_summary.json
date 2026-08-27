@@ -1,0 +1,8 @@
+{
+  "training_rows": 67529,
+  "training_columns": 44,
+  "training_late_rate": 0.09027232744450532,
+  "class_imbalance_ratio": 10.07759186351706,
+  "saved_chart_count": 7,
+  "validation_or_test_opened": false
+}

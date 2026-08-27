@@ -1,0 +1,11 @@
+{
+  "data_source": "postgresql",
+  "source_detail": "All tables read from local PostgreSQL.",
+  "source_order_rows": 99441,
+  "output_rows": 99441,
+  "output_columns": 41,
+  "unique_orders": 99441,
+  "reviews_excluded_as_future_information": true,
+  "items_aggregated_before_join": true,
+  "payments_aggregated_before_join": true
+}
