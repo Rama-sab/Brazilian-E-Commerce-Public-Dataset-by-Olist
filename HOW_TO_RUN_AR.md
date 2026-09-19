@@ -150,6 +150,3 @@ docker compose down -v
 
 التقرير الجاهز للرفع إلى Classroom هو:
 
-```text
-Task1_Report.docx
-```

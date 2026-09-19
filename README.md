@@ -1,140 +1,197 @@
-# Task 1 — Get the Olist Data Into a Database
+# Olist MLOps Task 3 - From Notebooks to Production
 
-Everything needed to load the Olist Brazilian E-Commerce CSVs into PostgreSQL,
-running locally with Docker.
+This repository turns the frozen outputs of Task 2 into a production-style inference
+service. It accepts the information available for a new order and returns `late` or
+`on_time`, the probability of late delivery, and the registered model version.
 
-## Folder structure
+Training remains in the six notebooks. Inference never calls `fit`: it uses the fitted
+Notebook 05 preprocessor and the Notebook 06 logistic-regression bundle supplied with the
+project. An automated parity test proves that the module output matches the saved notebook
+predictions for the same test orders.
 
-```
-olist_task1/
-├── docker-compose.yml       # spins up Postgres (+ pgAdmin) locally
-├── init/
-│   └── schema.sql            # creates the 9 tables + indexes
-├── data/                      # put the 9 Olist CSV files here (from Kaggle)
-├── scripts/
-│   ├── load_data.py           # loads the CSVs into Postgres
-│   └── test_queries.sql       # Step 3 test/verification queries
-├── requirements.txt
-├── query_output.txt            # verified output from the test queries
-├── Task1_Report.docx           # submission report
-└── README.md
-```
+## Start the complete stack with one command
 
-## How to run it
-
-### 1. Get the data
-Download the CSVs from Kaggle (link is in `Olist_Dataset_Introduction.pdf`):
-https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
-
-Unzip them into the `data/` folder so you have:
-```
-data/olist_customers_dataset.csv
-data/olist_geolocation_dataset.csv
-data/olist_order_items_dataset.csv
-data/olist_order_payments_dataset.csv
-data/olist_order_reviews_dataset.csv
-data/olist_orders_dataset.csv
-data/olist_products_dataset.csv
-data/olist_sellers_dataset.csv
-data/product_category_name_translation.csv
-```
-
-### 2. Start the database (Docker)
-```bash
-docker compose up -d
-```
-This starts:
-- **postgres** on `localhost:5432` (db=`olist_db`, user=`olist_user`, pass=`olist_pass`) — the schema in `init/schema.sql` is applied automatically on first start.
-- **pgadmin** on `localhost:5050` (optional GUI, login `admin@olist.local` / `admin`)
-
-Check it's healthy:
-```bash
-docker compose ps
-docker compose logs postgres --tail 30
-```
-
-### 3. Load the CSVs into the database
-
-Windows PowerShell:
+Prerequisite: install and start Docker Desktop. Then run:
 
 ```powershell
-py -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python scripts\load_data.py --data-dir .\data
+.\RUN_TASK3.bat
 ```
 
-Linux/macOS:
+The launcher copies `.env.example` to the ignored `.env` file if needed, builds the image,
+starts every service, waits for health checks, registers the frozen model, assigns the
+`champion` alias and `Production` stage tag, and starts the API. Change the classroom
+passwords in `.env` before using the stack outside a local demonstration.
+
+| Service | URL | Purpose |
+|---|---|---|
+| FastAPI | <http://localhost:8000/docs> | Interactive API documentation and examples |
+| MLflow | <http://localhost:5000> | Runs, metrics, artifacts, registry version and alias |
+| MinIO | <http://localhost:9001> | Container-reachable S3 artifact storage |
+| Prometheus | <http://localhost:9090> | Request, latency, error and drift metrics |
+| PostgreSQL | `localhost:5432` | MLflow metadata and durable prediction logs |
+
+The equivalent cross-platform command is:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-python -m pip install -r requirements.txt
-python scripts/load_data.py --data-dir ./data
-```
-You should see each table print its row count, e.g.:
-```
-Loading customers <- ./data/olist_customers_dataset.csv ... 99,441 rows OK
-Loading sellers <- ./data/olist_sellers_dataset.csv ... 3,095 rows OK
-Loading products <- ./data/olist_products_dataset.csv ... 32,951 rows OK
-Loading product_category_translation <- ./data/product_category_name_translation.csv ... 71 rows OK
-Loading geolocation <- ./data/olist_geolocation_dataset.csv ... 1,000,163 rows OK
-Loading orders <- ./data/olist_orders_dataset.csv ... 99,441 rows OK
-Loading order_items <- ./data/olist_order_items_dataset.csv ... 112,650 rows OK
-Loading order_payments <- ./data/olist_order_payments_dataset.csv ... 103,886 rows OK
-Loading order_reviews <- ./data/olist_order_reviews_dataset.csv ... 99,224 rows OK
+docker compose --env-file .env.example up -d --build --wait
 ```
 
-### 4. Test it (connect + query + join)
+Stop the stack without deleting its data:
 
-No host `psql` installation is required. On Windows PowerShell:
-
-```powershell
-Get-Content .\scripts\test_queries.sql |
-  docker compose exec -T postgres psql -U olist_user -d olist_db
-```
-
-On Linux/macOS:
-
-```bash
-docker compose exec -T postgres \
-  psql -U olist_user -d olist_db < scripts/test_queries.sql
-```
-
-Or connect interactively through the container:
-
-```bash
-docker compose exec postgres psql -U olist_user -d olist_db
-\dt                      -- list tables
-SELECT * FROM orders LIMIT 5;
-```
-
-### 5. Shut down (keeps data, since it's in a named volume)
 ```bash
 docker compose down
 ```
-To wipe the data too: `docker compose down -v`
 
-## Schema (ERD)
+## Try the API
 
-```
-customers ──< orders >──< order_items >── products ── product_category_translation
-                │              │
-                │              └──< sellers
-                ├──< order_payments
-                └──< order_reviews
+Health and model metadata:
 
-customers.customer_zip_code_prefix ──> geolocation.geolocation_zip_code_prefix
-sellers.seller_zip_code_prefix     ──> geolocation.geolocation_zip_code_prefix
+```powershell
+curl.exe http://localhost:8000/health
+curl.exe http://localhost:8000/v1/model
 ```
 
-- **orders** is the central fact table: one row per order.
-- **order_items** and **order_payments** are one-to-many with `orders` (an order
-  can have several items and several payment installments) — they must be
-  aggregated (`GROUP BY order_id`) before joining back to `orders`, otherwise
-  the order-level row gets duplicated.
-- **order_reviews** is mostly one-to-one with `orders`.
-- **geolocation** links to `customers` / `sellers` through the ZIP-code prefix,
-  not a dedicated ID.
+Single prediction using the supplied example:
 
+```powershell
+curl.exe -X POST http://localhost:8000/v1/predict `
+  -H "Content-Type: application/json" `
+  --data-binary "@models/seed/example_order.json"
+```
 
+The response has this contract:
+
+```json
+{
+  "request_id": "generated-uuid",
+  "order_id": "b3b54427f53d13f6063ef7007bf7d371",
+  "prediction": "on_time",
+  "probability": 0.5451138144592078,
+  "model_version": "1",
+  "validation_status": "passed"
+}
+```
+
+Batch route:
+
+```http
+POST /v1/predict/batch
+Content-Type: application/json
+
+{"orders": [{...}, {...}]}
+```
+
+The maximum batch size is configured by `service.batch_max_size`. FastAPI/Pydantic rejects
+wrong or missing fields, and Great Expectations rejects values outside the configured
+ranges or allowed categories before the model is called.
+
+## Run from the command line
+
+Create a Python 3.12 environment and install the exact pinned development dependencies:
+
+```powershell
+py -3.12 -m venv .venv-task3
+.\.venv-task3\Scripts\Activate.ps1
+python -m pip install -r requirements/dev.txt
+python -m pip install -e . --no-deps
+```
+
+Use the local release artifacts for an offline command-line check:
+
+```powershell
+$env:MODEL_LOADER = "local"
+python -m olist_mlops.cli --file models/seed/example_order.json
+```
+
+Production uses `MODEL_LOADER=registry`; the API then resolves
+`models:/olist-late-delivery@champion` from MLflow rather than loading a notebook folder.
+
+## Run all checks with one command
+
+After installing the development requirements:
+
+```powershell
+.\scripts\test.ps1
+```
+
+Or run the same gates individually:
+
+```powershell
+$env:MODEL_LOADER = "local"
+$env:PREDICTION_STORE_BACKEND = "jsonl"
+ruff check .
+ruff format --check .
+pytest
+```
+
+Tests cover feature engineering, allowed missing values, Great Expectations failures,
+schema/range/category/null/leakage data rules, model loading, output shape, exact notebook
+parity, API routes, batch prediction, monitoring, and durable prediction logging. A failing
+test returns a non-zero status and stops both the local script and GitHub Actions pipeline.
+
+## Repository structure
+
+```text
+app/                 FastAPI routes, lifecycle and exception handling
+config/              Service parameters, feature/data contract and Prometheus scrape config
+data/                Original Olist data; versioned by DVC, not baked into the API image
+models/seed/         Small frozen release bundle used only to bootstrap MLflow on a clean machine
+notebooks/            The six Task 2 training notebooks; excluded from the service image
+src/olist_mlops/     Config, features, GX validation, inference, registry, storage and metrics
+tests/                Unit, data, model-parity and API integration tests
+requirements/         Separately pinned runtime and development dependencies
+monitoring/           Prometheus alert rules
+docs/                 Architecture, validation, versioning and operations decisions
+.github/workflows/    Push/PR quality gates plus image build and GHCR push on main
+```
+
+The API image copies only `app`, `src`, `config`, packaging metadata and runtime
+requirements. It deliberately excludes raw data, artifacts, notebooks, tests and secrets.
+
+## Configuration
+
+All service behavior is in `config/settings.yaml` and `config/feature_contract.yaml`.
+Environment placeholders make the same code usable locally and in containers.
+
+| Setting | Reason |
+|---|---|
+| `model.loader`, `tracking_uri`, `name`, `alias` | Select registry loading and the deployable version without changing code |
+| `model.local_*_path` | Explicit test/bootstrap paths for the frozen fitted objects |
+| `validation.failure_policy` | Documents that invalid orders are rejected with HTTP 422 |
+| `prediction_store.*` | Select PostgreSQL in production or JSONL in isolated tests |
+| `logging.*` | Level, format, rotation size and destinations |
+| `monitoring.*` | Rolling window, reference rate and alert thresholds |
+| feature lists/ranges/categories/nullability | Reproduce Notebook 05 and define the incoming data contract |
+
+Secrets and connection strings are passed through environment variables. `.env` is ignored;
+only safe example names and local demonstration values are committed.
+
+## Data and artifact traceability
+
+DVC pointers track `data/raw` and `artifacts`. The configured `minio` remote points at the
+stack's S3-compatible storage and contains no committed credentials. After the stack is up:
+
+```powershell
+$env:AWS_ACCESS_KEY_ID = (Select-String MINIO_ROOT_USER .env).Line.Split('=')[1]
+$env:AWS_SECRET_ACCESS_KEY = (Select-String MINIO_ROOT_PASSWORD .env).Line.Split('=')[1]
+dvc push
+```
+
+MLflow records the frozen model parameters, validation/test metrics, feature list and result
+summary, stores model files in MinIO, creates a registry version, tags its stage as
+`Production`, and assigns the `champion` alias. The registration step does not train or fit
+anything.
+
+## Observability and later evaluation
+
+Every accepted or rejected prediction is logged with input, output/error, latency and model
+version. Production records are stored in PostgreSQL table `prediction_logs`; the schema
+reserves `actual_delivery_timestamp` and `actual_late` for evaluation after ground truth
+arrives. `/metrics` exposes HTTP counts/latency, prediction classes/probabilities, validation
+errors, rolling late ratio and a distribution-drift score.
+
+See [architecture](docs/architecture.md), [validation and failure behavior](docs/validation.md),
+[data/model versioning](docs/versioning.md), and [monitoring decisions](docs/monitoring.md).
+The [assignment checklist](docs/assignment-checklist.md) maps every brief requirement to
+its implementation and verification evidence.
+Earlier work remains documented in [Task 2](TASK2_README.md) and the Task 1 files.

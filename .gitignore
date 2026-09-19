@@ -2,19 +2,27 @@
 .env.*
 !.env.example
 
-data/raw/*
-!data/raw/.gitkeep
-
+.venv/
+.venv-task3/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 .ipynb_checkpoints/
-.venv/
-venv/
+
+logs/*
+!logs/.gitkeep
+prediction_logs/*
+!prediction_logs/.gitkeep
 tmp/
+work/
+mlruns/
 
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
 
+/artifacts

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "olist-mlops-task3"
+version = "3.0.0"
+description = "Production inference service for Olist late-delivery prediction"
+requires-python = ">=3.12,<3.13"
+dynamic = ["dependencies"]
+
+[project.scripts]
+olist-predict = "olist_mlops.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements/runtime.txt"]}
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+pythonpath = [".", "src"]
+testpaths = ["tests"]
+markers = [
+  "integration: end-to-end API tests",
+  "data: data-contract and leakage tests",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+  "notebooks",
+  "artifacts",
+  "data",
+  "work",
+  "tools",
+  "scripts/load_data.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"

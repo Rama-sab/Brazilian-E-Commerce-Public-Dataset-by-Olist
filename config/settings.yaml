@@ -1,0 +1,45 @@
+service:
+  name: olist-late-delivery-api
+  version: 3.0.0
+  environment: ${APP_ENV:-production}
+  host: ${API_HOST:-0.0.0.0}
+  port: ${API_PORT:-8000}
+  batch_max_size: ${BATCH_MAX_SIZE:-100}
+
+paths:
+  feature_contract: config/feature_contract.yaml
+  log_file: ${APP_LOG_FILE:-logs/api.log}
+  prediction_log_file: ${PREDICTION_LOG_FILE:-prediction_logs/predictions.jsonl}
+
+model:
+  loader: ${MODEL_LOADER:-registry}
+  name: olist-late-delivery
+  alias: ${MODEL_ALIAS:-champion}
+  expected_stage: Production
+  tracking_uri: ${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+  local_preprocessor_path: ${PREPROCESSOR_PATH:-models/seed/05_preprocessor.joblib}
+  local_bundle_path: ${MODEL_BUNDLE_PATH:-models/seed/06_final_model.joblib}
+  local_version: attached-task2-v1
+
+validation:
+  failure_policy: reject
+  context_mode: ephemeral
+
+prediction_store:
+  backend: ${PREDICTION_STORE_BACKEND:-jsonl}
+  database_url: ${DATABASE_URL:-sqlite:///prediction_logs/predictions.db}
+  table_name: prediction_logs
+
+logging:
+  level: ${LOG_LEVEL:-INFO}
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%dT%H:%M:%S%z"
+  max_bytes: 10485760
+  backup_count: 5
+
+monitoring:
+  rolling_window: 200
+  baseline_late_rate: 0.06613226452905811
+  drift_absolute_rate_threshold: 0.12
+  latency_p95_alert_seconds: 0.50
+  error_rate_alert_ratio: 0.05

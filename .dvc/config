@@ -1,0 +1,5 @@
+[core]
+    remote = minio
+['remote "minio"']
+    url = s3://dvc/olist-task3
+    endpointurl = http://localhost:9000

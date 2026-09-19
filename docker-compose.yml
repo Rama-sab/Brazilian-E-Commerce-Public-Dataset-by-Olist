@@ -1,34 +1,170 @@
+name: olist-mlops-task3
+
+x-app-environment: &app-environment
+  APP_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+
 services:
-  postgres:
-    image: postgres:16
-    container_name: olist_postgres
-    restart: unless-stopped
+  db:
+    image: postgres:16.10-alpine
     environment:
-      POSTGRES_USER: olist_user
-      POSTGRES_PASSWORD: olist_pass
-      POSTGRES_DB: olist_db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - olist_pgdata:/var/lib/postgresql/data
-      - ./init/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - ./data/raw:/data/raw:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U olist_user -d olist_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 10
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: olist_pgadmin
+      retries: 20
     restart: unless-stopped
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@olist.local
-      PGADMIN_DEFAULT_PASSWORD: admin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
-      - "5050:80"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  create-buckets:
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
     depends_on:
-      - postgres
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: >
+      /bin/sh -c '
+      mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+      mc mb --ignore-existing local/mlflow;
+      mc mb --ignore-existing local/dvc;
+      '
+    restart: "no"
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      - mlflow
+      - server
+      - --backend-store-uri
+      - postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - --artifacts-destination
+      - s3://mlflow
+      - --serve-artifacts
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_SERVER_ALLOWED_HOSTS: mlflow:5000,localhost:5000,127.0.0.1:5000
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      create-buckets:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  register-model:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "-m", "olist_mlops.register_model", "config/settings.yaml"]
+    environment:
+      <<: *app-environment
+      MODEL_LOADER: local
+      PREPROCESSOR_PATH: /opt/olist/models/seed/05_preprocessor.joblib
+      MODEL_BUNDLE_PATH: /opt/olist/models/seed/06_final_model.joblib
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    volumes:
+      - ./models/seed:/opt/olist/models/seed:ro
+      - ./logs:/opt/olist/logs
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      <<: *app-environment
+      MODEL_LOADER: registry
+      MODEL_ALIAS: champion
+      PREDICTION_STORE_BACKEND: postgresql
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./logs:/opt/olist/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      register-model:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
-  olist_pgdata:
+  postgres_data:
+  minio_data:
+  prometheus_data:

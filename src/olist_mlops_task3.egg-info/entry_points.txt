@@ -1,0 +1,2 @@
+[console_scripts]
+olist-predict = olist_mlops.cli:main
